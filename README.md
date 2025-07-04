@@ -1,4 +1,10 @@
 # ORMTool
+![C++17](https://img.shields.io/badge/language-C%2B%2B17-blue)
+![OpenGL](https://img.shields.io/badge/OpenGL-4.3-green)
+![GLFW](https://img.shields.io/badge/Windowing-GLFW-0099cc)
+![ImGui](https://img.shields.io/badge/GUI-Dear%20ImGui-blueviolet)
+![Platform](https://img.shields.io/badge/platform-Windows-blue)
+![License: MIT](https://img.shields.io/badge/license-MIT-blue)
 
 **ORMTool** is a lightweight C++ desktop application that generates ORM (Occlusion-Roughness-Metallic) texture maps by combining separate grayscale images. It provides real-time previews, supports both Unreal Engine and Unity formats, and uses a modern GUI built with Dear ImGui.
 
