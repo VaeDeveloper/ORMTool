@@ -107,13 +107,17 @@ add_executable(ORMTool
     src/App/App.h
     src/App/App.cpp
 
-    src/MVC/Controller.cpp
-    src/MVC/Controller.h
-    src/MVC/Model.cpp
-    src/MVC/Model.h
+    src/MVC/IView.h
+    src/MVC/IController.h
+    src/MVC/IModel.h
+    src/MVC/BoilerplateMacro.h
 
     src/UI/UIManager.cpp
     src/UI/UIManager.h
+
+    src/IO/IOService.cpp
+    src/IO/IOService.h
+
 
 )
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/src PREFIX "Source" FILES
@@ -122,13 +126,16 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/src PREFIX "Source" FILES
     src/App/App.h
     src/App/App.cpp
 
-    src/MVC/Controller.cpp
-    src/MVC/Controller.h
-    src/MVC/Model.cpp
-    src/MVC/Model.h
+    src/MVC/IView.h
+    src/MVC/IController.h
+    src/MVC/IModel.h
+    src/MVC/BoilerplateMacro.h
 
     src/UI/UIManager.cpp
     src/UI/UIManager.h
+    
+    src/IO/IOService.cpp
+    src/IO/IOService.h
 )
 
 
