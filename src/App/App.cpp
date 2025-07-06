@@ -4,7 +4,8 @@
 #include "Constants.h"
 
 
-
+#include "backends/imgui_impl_glfw.h"
+#include "backends/imgui_impl_opengl3.h"
 
 Application::Application() : uiManager(std::make_unique<UIManager>())
 {
@@ -18,10 +19,8 @@ Application::~Application()
 
 [[nodiscard]] InitStatus Application::InitializeApplication()
 {
-	if (initStatus.has_value())
-	{
+	if(initStatus.has_value())
 		return *initStatus;
-	}
 
 	const auto glfwStatus = InitializeGLFW();
 	if(glfwStatus != InitStatus::Success) {
@@ -29,33 +28,48 @@ Application::~Application()
 		initStatus = glfwStatus;
 		return glfwStatus;
 	}
+
+	// ImGui init block
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGui::StyleColorsDark();
+
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init("#version 130");
+
 	int major, minor, rev;
 	glfwGetVersion(&major, &minor, &rev);
-	std::cout << "GLFW Version: " << major << "." << minor << "." << rev << "\n";	
-
+	std::cout << "GLFW Version: " << major << "." << minor << "." << rev << "\n";
 	std::cout << "GLFW Initialized successfully\n";
+
 	initStatus = InitStatus::Success;
-	return InitStatus::Success; 
+	return InitStatus::Success;
 }
 
 void Application::RunApplication()
 {
-	if(!IsInitialized()) 
-	{
+	if(!IsInitialized()) {
 		std::cerr << "Application not initialized!\n";
 		return;
 	}
-	
+
 	while(!glfwWindowShouldClose(window))
 	{
 		glfwPollEvents();
 
+		// ImGui new frame
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+
 		uiManager->BeginFrame();
 		uiManager->DrawUI();
-		
-		/* render */
-		RenderScene();
-		uiManager->Render();
+
+		ImGui::Render();
+		RenderScene();  // Optional if you want to clear or draw OpenGL under ImGui
+
+		uiManager->Render(); // If needed
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		glfwSwapBuffers(window);
 	}
 }
@@ -74,6 +88,10 @@ void Application::Shutdown()
 		window = nullptr;
 	}
 
+	// uiManager->Shutdown();
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
 	glfwTerminate();
 	initStatus.reset();
 }
