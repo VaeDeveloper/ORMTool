@@ -20,7 +20,7 @@ int main()
 }
 
 
-#pragma region PrototyCode
+#pragma region PrototypeCode
 //namespace fs = std::filesystem;
 //
 //// Globals
@@ -392,4 +392,4 @@ int main()
 //    glfwTerminate();
 //    return 0;
 //}
-#pragma endregion PrototyCode
+#pragma endregion PrototypeCode
