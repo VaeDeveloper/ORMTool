@@ -122,6 +122,8 @@ struct PreviewTexture {
 };
 
 PreviewTexture aoPreview, roughPreview, metallicPreview, ormPreview;
+
+
 bool SaveUnrealAndUnityORM(
     const std::string& ao, const std::string& rough, const std::string& metal,
     const std::string& unrealPath, const std::string& unityPath,
@@ -283,28 +285,32 @@ void ShowMainUI()
     ImGui::SetColumnWidth(0, 145);
 
     // === LEFT PANEL ===
-    auto showTextureBlock = [] (const char* label, PreviewTexture& tex, const char* title, int& resolutionIndex, ImVec4 borderColor) {
-        ImGui::PushID(label);
-        ImGui::TextUnformatted(title);
-        ImGui::SetNextItemWidth(135.0f);
-        ImGui::Combo("##resCombo", &resolutionIndex, resolutionOptions, resolutionCount);
+    auto showTextureBlock = [] (const char* label, PreviewTexture& tex, const char* title, int& resolutionIndex, ImVec4 borderColor) 
+        {
+            ImGui::PushID(label);
+            ImGui::TextUnformatted(title);
+            ImGui::SetNextItemWidth(135.0f);
+            ImGui::Combo("##resCombo", &resolutionIndex, resolutionOptions, resolutionCount);
 
-        ImGui::PushStyleColor(ImGuiCol_Button, borderColor);
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 0.4f, 0.4f, 1.0f));
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_Button, borderColor);
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 0.4f, 0.4f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
 
-        if(ImGui::ImageButton(label, (ImTextureID)(intptr_t)tex.glId, ImVec2(128, 128))) {
-            nfdchar_t* outPath = nullptr;
-            if(NFD_OpenDialog("png,jpg", nullptr, &outPath) == NFD_OKAY) {
-                tex.Unload();
-                tex.path = outPath;
-                tex.Load(outPath);
-                free(outPath);
+            if(ImGui::ImageButton(label, (ImTextureID)(intptr_t)tex.glId, ImVec2(128, 128))) 
+            {
+                nfdchar_t* outPath = nullptr;
+                if(NFD_OpenDialog("png,jpg", nullptr, &outPath) == NFD_OKAY) 
+                {
+                    tex.Unload();
+                    tex.path = outPath;
+                    tex.Load(outPath);
+                    free(outPath);
+                }
             }
-        }
-        ImGui::PopStyleColor(3);
-        ImGui::Dummy(ImVec2(0, 3));
-        ImGui::PopID();
+
+            ImGui::PopStyleColor(3);
+            ImGui::Dummy(ImVec2(0, 3));
+            ImGui::PopID();
         };
 
     showTextureBlock("AO", aoPreview, "AO", aoResolutionIndex, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));

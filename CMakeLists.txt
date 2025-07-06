@@ -118,7 +118,7 @@ add_executable(ORMTool
     src/IO/IOService.cpp
     src/IO/IOService.h
 
-
+    src/Utils/Constants.h
 )
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/src PREFIX "Source" FILES
     src/main.cpp
@@ -136,12 +136,21 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/src PREFIX "Source" FILES
     
     src/IO/IOService.cpp
     src/IO/IOService.h
+
+    src/Utils/Constants.h
 )
 
 
 # Include directories
 target_include_directories(ORMTool PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/stb
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/MVC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/IO
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/App
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/UI
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Utils
+
     ${imgui_SOURCE_DIR}
     ${imgui_SOURCE_DIR}/backends
     ${CMAKE_BINARY_DIR}/_deps/nativefiledialog-src/src/include
