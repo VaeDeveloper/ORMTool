@@ -6,48 +6,6 @@
 
 
 
-namespace ImNeo
-{
-	void custom_cursor(ImVec2 position, float rotation_angle_degrees, ImColor color) {
-		float arrow_base_width = 8;
-		float arrow_height = 9;
-		float arrow_middle_width = 7;
-		float outline_thickness = 2.0f;
-
-
-		ImVec2 verts[4];
-		verts[0] = position;
-		verts[1] = ImVec2(position.x - arrow_base_width / 2, position.y + arrow_height);
-		verts[2] = ImVec2(position.x, position.y + arrow_middle_width);
-		verts[3] = ImVec2(position.x + arrow_base_width / 2, position.y + arrow_height);
-
-
-		ImVec2 center = ImVec2(position.x, position.y + arrow_height / 2);
-
-		float angle_radians = rotation_angle_degrees * (3.14159f / 180.0f);
-
-		auto rotate_vertex = [&] (ImVec2 point, ImVec2 center, float angle) -> ImVec2 {
-			float translated_x = point.x - center.x;
-			float translated_y = point.y - center.y;
-
-			float rotated_x = translated_x * cos(angle) - translated_y * sin(angle);
-			float rotated_y = translated_x * sin(angle) + translated_y * cos(angle);
-
-			return ImVec2(rotated_x + center.x, rotated_y + center.y);
-			};
-
-		verts[0] = rotate_vertex(verts[0], center, angle_radians);
-		verts[1] = rotate_vertex(verts[1], center, angle_radians);
-		verts[2] = rotate_vertex(verts[2], center, angle_radians);
-		verts[3] = rotate_vertex(verts[3], center, angle_radians);
-
-		ImDrawList* draw_list = ImGui::GetForegroundDrawList();
-
-		draw_list->AddPolyline(verts, 4, color, true, outline_thickness);
-
-		draw_list->AddConvexPolyFilled(verts, 4, color);
-	}
-}
 
 
 Application::Application() : uiManager(std::make_unique<UIManager>())
@@ -73,7 +31,7 @@ Application::~Application()
 	}
 	uiManager->Initialize(window);
 
-	//// ImGui init block
+
 	int major, minor, rev;
 	glfwGetVersion(&major, &minor, &rev);
 	std::cout << "GLFW Version: " << major << "." << minor << "." << rev << "\n";
@@ -102,21 +60,9 @@ void Application::RunApplication()
 
 		uiManager->DrawUI();
 
-		ImGui::Begin("##InvisibleCursorWindow", nullptr,
-			ImGuiWindowFlags_NoDecoration |
-			ImGuiWindowFlags_NoInputs |
-			ImGuiWindowFlags_NoBackground |
-			ImGuiWindowFlags_NoBringToFrontOnFocus);
-
-		ImVec2 mouse_pos = ImGui::GetIO().MousePos;
-		ImNeo::custom_cursor(mouse_pos, -45.0f, ImColor(255, 255, 255));
-
-		ImGui::End();
-
 		uiManager->Render();
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
 		glfwSwapBuffers(window);
 	}
 }
@@ -193,7 +139,7 @@ std::string_view Application::GetInitStatus(InitStatus status)
 void Application::RenderScene()
 {
 	glViewport(0, 0, ORM::WindowWidth, ORM::WindowHeight);
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f); // Ярко-розовый
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f); // пїЅпїЅпїЅпїЅ-пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	glClear(GL_COLOR_BUFFER_BIT);
 }
 
