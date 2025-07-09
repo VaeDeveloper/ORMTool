@@ -2,6 +2,8 @@
 
 #include "UIManager.h"
 #include <imgui.h>
+#include <imgui_internal.h>
+
 #include <nfd.h>
 #include <stb_image.h>
 #include <stb_image_write.h>
@@ -11,8 +13,96 @@
 
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
+#include <future>
 
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
+
+
+#include <unordered_map>
+
+namespace ImNeo 
+{
+
+	struct CheckboxState
+	{
+		ImVec4 background = ImVec4(0.2f, 0.2f, 0.2f, 1.0f);
+		ImVec4 text_colored = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+		ImVec4 circle = ImVec4(0.6f, 0.6f, 0.6f, 1.0f);
+		float circle_offset = 0.0f;
+	};
+
+	inline std::unordered_map<ImGuiID, CheckboxState> checkbox_states;
+
+	bool Checkbox(const char* label, bool* value,
+		float height = 22.0f,
+		float toggle_width = 30.0f,
+		float toggle_height = 14.0f,
+		float radius = 5.0f,
+		float spacing = 8.0f)
+	{
+		ImGuiWindow* window = ImGui::GetCurrentWindow();
+		if(!window || window->SkipItems) return false;
+
+		ImGuiID id = window->GetID(label);
+		ImVec2 label_size = ImGui::CalcTextSize(label);
+		float total_width = label_size.x + spacing + toggle_width;
+
+		ImVec2 pos = ImGui::GetCursorScreenPos();
+		ImVec2 toggle_pos = ImVec2(pos.x + label_size.x + spacing,
+			pos.y + (height - toggle_height) * 0.5f);
+		ImVec2 toggle_size = ImVec2(toggle_width, toggle_height);
+
+		ImRect total_bb(pos, ImVec2(pos.x + total_width, pos.y + height));
+		ImGui::ItemSize(total_bb);
+		if(!ImGui::ItemAdd(total_bb, id)) return false;
+
+		bool hovered, held;
+		bool pressed = ImGui::ButtonBehavior(total_bb, id, &hovered, &held);
+
+		auto& state = checkbox_states[id];
+
+		ImGuiIO& io = ImGui::GetIO();
+		ImVec4 target_text = *value ? ImVec4(1.0f, 1.0f, 1.0f, 1.0f) :
+			hovered ? ImVec4(0.9f, 0.9f, 0.9f, 1.0f) :
+			ImVec4(0.6f, 0.6f, 0.6f, 1.0f);
+		ImVec4 target_bg = *value ? ImVec4(0.2f, 0.6f, 0.3f, 1.0f) : ImVec4(0.15f, 0.15f, 0.15f, 1.0f);
+		ImVec4 target_circle = *value ? ImVec4(1.0f, 1.0f, 1.0f, 1.0f) : ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
+
+		state.text_colored = ImLerp(state.text_colored, target_text, io.DeltaTime * 8.0f);
+		state.background = ImLerp(state.background, target_bg, io.DeltaTime * 8.0f);
+		state.circle = ImLerp(state.circle, target_circle, io.DeltaTime * 8.0f);
+		float left_offset = radius + 3.0f;
+		float right_offset = toggle_width - radius - 3.0f;
+		state.circle_offset = ImLerp(state.circle_offset, *value ? right_offset : left_offset, io.DeltaTime * 10.0f);
+
+		if(pressed)
+		{
+			*value = !(*value);
+			ImGui::MarkItemEdited(id);
+		}
+
+		// Draw toggle
+		ImVec2 toggle_min = toggle_pos;
+		ImVec2 toggle_max = ImVec2(toggle_min.x + toggle_width, toggle_min.y + toggle_height);
+		ImVec2 circle_center = ImVec2(toggle_min.x + state.circle_offset, toggle_min.y + toggle_height * 0.5f);
+
+		ImU32 bg_col = ImGui::ColorConvertFloat4ToU32(state.background);
+		ImU32 circle_col = ImGui::ColorConvertFloat4ToU32(state.circle);
+		ImU32 text_col = ImGui::ColorConvertFloat4ToU32(state.text_colored);
+
+		window->DrawList->AddRectFilled(toggle_min, toggle_max, bg_col, toggle_height * 0.5f); // Rounded toggle
+		window->DrawList->AddCircleFilled(circle_center, radius, circle_col, 12);             // Circle
+
+		// Draw label
+		window->DrawList->AddText(pos, text_col, label);
+
+		// Fix SameLine
+		ImGui::SetCursorScreenPos(ImVec2(pos.x + total_width, pos.y));
+		return pressed;
+	}
+
+
+} // namespace my_widgets
 
 namespace fs = std::filesystem;
 
@@ -28,7 +118,8 @@ void UIManager::Initialize(GLFWwindow* window)
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGui::StyleColorsDark();
-
+	ImGuiIO& io = ImGui::GetIO();
+	io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init("#version 130");
 }
@@ -60,7 +151,7 @@ void UIManager::Shutdown()
 	//ImGui::DestroyContext();
 }
 
-bool UIManager::PreviewTexture::Load(const std::string& p)
+bool PreviewTexture::Load(const std::string& p)
 {
 	Unload();
 	path = p;
@@ -79,7 +170,7 @@ bool UIManager::PreviewTexture::Load(const std::string& p)
 	return true;
 }
 
-void UIManager::PreviewTexture::Unload()
+void PreviewTexture::Unload()
 {
 	if(glId) glDeleteTextures(1, &glId);
 	if(channelR) glDeleteTextures(1, &channelR);
@@ -90,7 +181,8 @@ void UIManager::PreviewTexture::Unload()
 	data = nullptr;
 }
 
-void UIManager::PreviewTexture::GenerateChannelsFromRGB(unsigned char* src, int w, int h) {
+void PreviewTexture::GenerateChannelsFromRGB(unsigned char* src, int w, int h) 
+{
 	width = w;
 	height = h;
 
@@ -117,7 +209,8 @@ void UIManager::PreviewTexture::GenerateChannelsFromRGB(unsigned char* src, int 
 	createTex(channelB, blue.data(), w, h);
 }
 
-unsigned char* LoadGrayscale(const std::string& path, int& width, int& height) {
+unsigned char* LoadGrayscale(const std::string& path, int& width, int& height) 
+{
 	int channels;
 	unsigned char* data = stbi_load(path.c_str(), &width, &height, &channels, 1);
 	if(!data) std::cerr << "Failed to load: " << path << "\n";
@@ -206,15 +299,15 @@ bool UIManager::SaveUnrealAndUnityORM(
 	return true;
 }
 
-void UIManager::ShowMainUI() 
+void UIManager::ShowMainUI()
 {
 	if(ImGui::BeginMainMenuBar())
 	{
-		if(ImGui::BeginMenu("File")) 
+		if(ImGui::BeginMenu("File"))
 		{
-			if(ImGui::BeginMenu("Save")) 
+			if(ImGui::BeginMenu("Save"))
 			{
-				if (ImGui::MenuItem("Save to PNG"))
+				if(ImGui::MenuItem("Save to PNG"))
 				{
 					std::cout << "Save selected\n";
 				}
@@ -225,7 +318,7 @@ void UIManager::ShowMainUI()
 				ImGui::EndMenu();
 			}
 
-			if(ImGui::MenuItem("Exit")) 
+			if(ImGui::MenuItem("Exit"))
 			{
 				std::exit(0);
 			}
@@ -233,9 +326,9 @@ void UIManager::ShowMainUI()
 			ImGui::EndMenu();
 		}
 
-		if(ImGui::BeginMenu("About")) 
+		if(ImGui::BeginMenu("About"))
 		{
-			if(ImGui::MenuItem("About")) 
+			if(ImGui::MenuItem("About"))
 			{
 				std::cout << "Save selected\n";
 			}
@@ -251,6 +344,9 @@ void UIManager::ShowMainUI()
 		ImGui::EndMainMenuBar();
 	}
 
+
+
+
 	ImVec2 menuHeight = ImVec2(0, ImGui::GetFrameHeight());
 	ImGui::SetNextWindowPos(menuHeight);
 	ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x, ImGui::GetIO().DisplaySize.y - menuHeight.y));
@@ -260,9 +356,6 @@ void UIManager::ShowMainUI()
 
 
 	ImGui::BeginChild("Header", ImVec2(686, 98), true);
-
-
-	ImGui::Text("Action");
 
 	std::string generatedStringButton = generatingORM ? "Cancel" : "Generate ORM";
 	if(ImGui::Button(generatedStringButton.c_str(), ImVec2(140, 30)) && !generatingORM) {
@@ -284,12 +377,18 @@ void UIManager::ShowMainUI()
 
 	if(!generatingORM) ormProgress = 0.0f;
 
+
+
 	ImGui::SameLine();
 	ImGui::ProgressBar(ormProgress, ImVec2(522, 30), ormProgress == 0.0f ? "Push Start Generating " : "Generating...");
-	ImGui::Checkbox("Generate Unreal ORM (RGB)", &generateUnrealORM);
+	// ImGui::Checkbox("Generate Unreal ORM (RGB)", &generateUnrealORM);
+	ImGui::Dummy(ImVec2(0.0f, 2.0f));
+	ImNeo::Checkbox("Unreal ORM (RGB)", &generateUnrealORM, 14.0f);
 	ImGui::SameLine();
-	ImGui::Checkbox("Unity ORM (RGBA)", &generateUnityORM);
-	ImGui::SameLine();
+	ImNeo::Checkbox("Unity (RGBA)", &generateUnityORM, 14.0f);
+	ImGui::SameLine(400.f, 2.0f);
+	
+	// ImGui::Dummy(ImVec2(4.0f, 0.0f));
 	ImGui::SetNextItemWidth(150.0f);
 	ImGui::Combo("Channel", (int*)&selectedChannel, "All (RGB)\0AO (R)\0Roughness (G)\0Metallic (B)\0");
 
@@ -344,18 +443,31 @@ void UIManager::ShowMainUI()
 	else if(selectedChannel == ORMChannel::Roughness_G) texId = ormPreview.channelG;
 	else if(selectedChannel == ORMChannel::Metallic_B) texId = ormPreview.channelB;
 
-	if(texId) {
+	if(texId)
+	{
 		ImGui::Image((ImTextureID)(intptr_t)texId, ImVec2(previewWidth, previewHeight));
 	}
-	else {
+	else
+	{
 		ImVec2 pos = ImGui::GetCursorScreenPos();
-		ImGui::GetWindowDrawList()->AddRect(pos, ImVec2(pos.x + previewWidth, pos.y + previewHeight), IM_COL32(255, 255, 255, 255));
-		ImGui::Dummy(ImVec2(previewWidth, previewHeight));
+		ImVec2 loaderPos = ImVec2(
+			pos.x + previewWidth - 85,
+			pos.y + previewHeight - 90
+		);
+		if (generatingORM )
+			AddLoadingCube("Generate", loaderPos);
+
+		if(loadingTexture)
+			AddLoadingCube("Loading", loaderPos);
 	}
 
 	ImGui::EndChild();
 	ImGui::Columns(1);
+
+
 	ImGui::End();
+
+
 }
 
 void UIManager::UpdatePreviewIfNeeded() {

@@ -133,7 +133,7 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/src PREFIX "Source" FILES
 
     src/UI/UIManager.cpp
     src/UI/UIManager.h
-    
+
     src/IO/IOService.cpp
     src/IO/IOService.h
 
@@ -151,6 +151,7 @@ target_include_directories(ORMTool PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/UI
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Utils
 
+    ${glad_SOURCE_DIR}/include
     ${imgui_SOURCE_DIR}
     ${imgui_SOURCE_DIR}/backends
     ${CMAKE_BINARY_DIR}/_deps/nativefiledialog-src/src/include

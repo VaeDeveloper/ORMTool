@@ -1,14 +1,9 @@
 #pragma once 
-
 #include <GLFW/glfw3.h>
 #include <memory>
 #include <string_view>
 #include <optional>
 #include "UIManager.h"
-
-
-
-
 
 enum class InitStatus
 {
@@ -35,7 +30,6 @@ private:
 	static void GLFWErrorCallback(int error, const char* description);
 	[[nodiscard]] InitStatus InitializeGLFW();
 	void RenderScene();
-
 
 
 	GLFWwindow* window = nullptr;
