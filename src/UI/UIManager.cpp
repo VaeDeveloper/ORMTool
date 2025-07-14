@@ -126,7 +126,7 @@ void UIManager::Initialize(GLFWwindow* window)
 
 void UIManager::BeginFrame()
 {
-	// Hotkey , menu bar 
+ 
 }
 
 void UIManager::DrawUI()
@@ -135,8 +135,8 @@ void UIManager::DrawUI()
 	UpdatePreviewIfNeeded();
 }
 
-void UIManager::Render() {
-	//  ImGui::Render + OpenGL renderer 
+void UIManager::Render() 
+{
 }
 
 void UIManager::Shutdown()
@@ -146,9 +146,6 @@ void UIManager::Shutdown()
 	metallicPreview.Unload();
 	ormPreview.Unload();
 
-	//ImGui_ImplOpenGL3_Shutdown();
-	//ImGui_ImplGlfw_Shutdown();
-	//ImGui::DestroyContext();
 }
 
 bool PreviewTexture::Load(const std::string& p)
